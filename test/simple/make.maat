@@ -1,5 +1,6 @@
 
 all: main
+	echo("$(TOPDIR)")
 
 main: main.o
 	shell("cc $^ -o $@")

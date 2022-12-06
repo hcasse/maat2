@@ -96,7 +96,7 @@ class Monitor:
 	
 	def print_info(self, info):
 		"""Print information line about built target."""
-		if not self.quiet and self.info_ena:
+		if not self.quiet:
 			self.handle_action()
 			sys.stderr.write(BOLD + BLUE + str(info) + NORMAL + "\n")
 			sys.stderr.flush()
@@ -157,5 +157,12 @@ class Monitor:
 		if msg:
 			msg = "(%s) " % msg
 		self.print_action_final(msg + RED + BOLD + "[FAILED]" + NORMAL)
+
+	def print(self, msg):
+		if sys.stderr == sys.stdout:
+			self.handle_action()
+		sys.stdout.write(msg + "\n")
+		sys.stdout.flush()
+		
 
 DEF = Monitor()		# better to remove it at some point

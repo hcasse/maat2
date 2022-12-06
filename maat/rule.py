@@ -17,6 +17,9 @@
 
 """"Classes managing the rules."""
 
+import os.path
+import maat.common as common
+
 class Rule:
 	"""Represents a rule to make a file."""
 
@@ -25,6 +28,34 @@ class Rule:
 		self.sources = sources
 		self.file = None
 		self.line = None
+
+	def needs_update(self):
+
+		# get youngest target
+		d = 0.
+		for target in self.targets:
+			try:
+				fd = os.path.getmtime(target)
+				if fd > d:
+					d = fd
+			except OSError:
+				#print("DEBUG: update as %s does not exist" % target)
+				return True
+		#print("DEBUG: target date = %f" % d)
+
+		# check for date in sources
+		for sources in self.sources:
+			try:
+				fd = os.path.getmtime(source)
+				if fd > d:
+					#print("DEBUG: update for %s: %f", source, fd)
+					return True
+			except OSError:
+				#print("DEBUG: update as %s does not exist" % source)
+				return True
+
+		# no update needed
+		return False
 		
 
 class DataBase:
@@ -40,6 +71,9 @@ class DataBase:
 		for target in rule.targets:
 			self.map[target] = rule
 
+	def rule_for(self, goal):
+		return self.map[goal]
+
 
 class FunRule(Rule):
 	"""Represents a rule which action is implemented by a function."""
@@ -52,4 +86,9 @@ class FunRule(Rule):
 		return " ".join(self.targets) + ":" + " ".join(self.sources) \
 			+ "\n\t" + "code %s:%d\n" % (self.file, self.line)
 
-
+	def make(self, mon):
+		try:
+			self.fun(self)
+		except common.MaatError as e:
+			mon.print_error(e)
+			return False
